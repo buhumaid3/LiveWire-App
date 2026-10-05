@@ -2426,6 +2426,10 @@
 })();
 </script>
 
+<!-- Supabase: backs the global leaderboard and live race (see supabase-config.js) -->
+<script src="vendor/supabase.js"></script>
+<script src="supabase-config.js"></script>
+
 <script>
 (function(){
   "use strict";
@@ -3068,19 +3072,16 @@
     ov.addEventListener('click', function(e){ if (e.target === ov) closeOverlay(ov); });
   });
 
-  // ---------- db capability: async global leaderboard ----------
-  // Note: real-time multiplayer isn't possible in a static single-file
-  // Artifact (no websocket/backend for live opponent netcode) — this is
-  // an honest async substitute: a shared, persistent global leaderboard,
-  // with an all-time view and a "this week" view.
-  var dbNS = null;
-  var dbReady = (async function(){
-    try {
-      if (window.claude && window.claude.use){
-        dbNS = await window.claude.use('db');
-      }
-    } catch(e){ dbNS = null; }
-  })();
+  // ---------- Supabase: async global leaderboard ----------
+  // A shared, persistent leaderboard backed by a public Postgres table
+  // (see supabase-config.js) — all-time view and a "this week" view.
+  var sbClient = null;
+  try {
+    if (window.supabase && window.LIVEWIRE_SUPABASE_URL && window.LIVEWIRE_SUPABASE_ANON_KEY) {
+      sbClient = window.supabase.createClient(window.LIVEWIRE_SUPABASE_URL, window.LIVEWIRE_SUPABASE_ANON_KEY);
+    }
+  } catch(e){ sbClient = null; }
+  var dbReady = Promise.resolve();
 
   function isoWeekKey(d){
     var dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -3124,18 +3125,20 @@
     lbBody.appendChild(msg);
 
     await dbReady;
-    if (!dbNS){
-      msg.textContent = 'The leaderboard is only available on the published page.';
+    if (!sbClient){
+      msg.textContent = 'The leaderboard isn’t set up yet.';
       return;
     }
     try {
-      var q = dbNS.collection('scores');
+      var query = sbClient.from('scores').select('name,score,level').order('score', { ascending:false }).limit(10);
       if (lbScope === 'week'){
-        q = q.where('weekKey', '==', isoWeekKey(new Date()));
+        query = query.eq('week_key', isoWeekKey(new Date()));
       }
-      var snap = await q.orderBy('score', 'desc').limit(10).get();
+      var res = await query;
+      if (res.error) throw res.error;
+      var rows = res.data || [];
       lbBody.innerHTML = '';
-      if (!snap.docs.length){
+      if (!rows.length){
         var empty = document.createElement('p');
         empty.className = 'lb-msg';
         empty.textContent = lbScope === 'week' ? 'No scores yet this week — be the first.' : 'No scores yet — be the first to light the board.';
@@ -3144,8 +3147,7 @@
       }
       var list = document.createElement('div');
       list.className = 'lb-list';
-      snap.docs.forEach(function(doc, i){
-        var d = (doc && doc.data && doc.data()) || {};
+      rows.forEach(function(d, i){
         var row = document.createElement('div');
         row.className = 'lb-row';
         var rank = document.createElement('span'); rank.className = 'lb-rank'; rank.textContent = '#' + (i+1);
@@ -3175,21 +3177,21 @@
     saveScoreBtn.addEventListener('click', async function(){
       var name = (saveNameInput.value || '').trim().slice(0,16) || 'Anonymous';
       await dbReady;
-      if (!dbNS){
+      if (!sbClient){
         saveStatus.hidden = false;
-        saveStatus.textContent = 'Leaderboard unavailable in this preview.';
+        saveStatus.textContent = 'Leaderboard isn’t set up yet.';
         return;
       }
       saveScoreBtn.disabled = true;
       saveScoreBtn.textContent = 'Saving…';
       try {
-        await dbNS.collection('scores').add({
+        var saveRes = await sbClient.from('scores').insert({
           name: name,
           score: window.__liveWire ? window.__liveWire.getScore() : 0,
           level: window.__liveWire ? window.__liveWire.getLevel() : 1,
-          ts: Date.now(),
-          weekKey: isoWeekKey(new Date())
+          week_key: isoWeekKey(new Date())
         });
+        if (saveRes.error) throw saveRes.error;
         saveRow.hidden = true;
         saveStatus.hidden = false;
         saveStatus.textContent = 'Saved to the leaderboard ✓';
@@ -3223,22 +3225,14 @@
   }
   if (shareScoreBtn) shareScoreBtn.addEventListener('click', shareScore);
 
-  // ---------- room capability: live 1v1 race ----------
-  // Honest limits, stated plainly: `room` only reaches other signed-in viewers
-  // in the SAME organization who have this exact page open RIGHT NOW — never
-  // arbitrary strangers with the link, and nothing here persists. Two players
-  // who open the Race screen within the same ~45s window get the identical
-  // seeded puzzle with no handshake needed, and see each other's live
-  // progress. Alone, it still works — the room just never lights up.
-  var roomNS = null;
-  var roomReady = (async function(){
-    try {
-      if (window.claude && window.claude.use){
-        roomNS = await window.claude.use('room');
-      }
-    } catch(e){ roomNS = null; }
-  })();
-
+  // ---------- Supabase Realtime: live 1v1+ race ----------
+  // Real cross-install multiplayer: any player running the shipped app,
+  // not just same-org Claude viewers with this exact page open. Two or
+  // more players who tap Live Race within the same ~45s window join the
+  // same Supabase Realtime channel (named after that window) and see
+  // each other's live progress via Presence; a finish is a Broadcast
+  // event. Alone, it still works end-to-end — the channel just never
+  // lights up with an opponent.
   var RACE_WINDOW_MS = 45000;
   function currentRaceWindowId(){ return Math.floor(Date.now() / RACE_WINDOW_MS); }
   function getRacerName(){
@@ -3250,44 +3244,59 @@
       return n;
     }catch(e){ return 'Racer'; }
   }
+  function getClientId(){
+    try{
+      var id = localStorage.getItem('livewire-client-id');
+      if (id) return id;
+      id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+      localStorage.setItem('livewire-client-id', id);
+      return id;
+    }catch(e){ return 'c' + Math.random().toString(36).slice(2,8); }
+  }
+  var myClientId = getClientId();
 
   var raceBtn = document.getElementById('raceBtn');
   var raceSubEl = document.getElementById('raceSub');
   var racePanel = document.getElementById('racePanel');
   var raceOppList = document.getElementById('raceOppList');
   var myRaceWindow = null;
+  var raceChannel = null;
+  var raceSubscribed = false;
 
   function updateRaceMenuSub(){
     if (!raceSubEl) return;
-    if (!roomNS){
-      raceSubEl.textContent = 'Live vs whoever else has this page open right now (unavailable in this preview).';
-      return;
-    }
-    var n = roomNS.peers().filter(function(p){ return !p.isMe; }).length;
-    raceSubEl.textContent = n > 0
-      ? (n + ' other player' + (n === 1 ? '' : 's') + ' from your workspace online right now')
-      : 'Live vs whoever else from your workspace has this page open.';
+    raceSubEl.textContent = sbClient
+      ? 'Live vs anyone else playing Live Wire right now.'
+      : 'Live race isn’t set up yet.';
   }
 
   function raceTotalLevels(){ return (window.__liveWire && window.__liveWire.raceTotalLevels) || 10; }
 
   function renderRaceOpponents(){
     if (!raceOppList) return;
-    if (!roomNS){
-      raceOppList.innerHTML = '<p class="race-opp-empty">Live race unavailable in this preview.</p>';
+    if (!sbClient){
+      raceOppList.innerHTML = '<p class="race-opp-empty">Live race isn’t set up yet.</p>';
       return;
     }
-    var opponents = roomNS.peers().filter(function(p){
-      return !p.isMe && p.presence && p.presence.mode === 'race' && p.presence.win === myRaceWindow;
+    if (!raceChannel){
+      raceOppList.innerHTML = '<p class="race-opp-empty">Connecting…</p>';
+      return;
+    }
+    var state = raceChannel.presenceState();
+    var opponents = [];
+    Object.keys(state).forEach(function(key){
+      if (key === myClientId) return;
+      var metas = state[key];
+      var meta = metas && metas[metas.length - 1];
+      if (meta) opponents.push(meta);
     });
     if (!opponents.length){
-      raceOppList.innerHTML = '<p class="race-opp-empty">No one else racing this puzzle yet — invite someone from your workspace.</p>';
+      raceOppList.innerHTML = '<p class="race-opp-empty">No one else racing this puzzle yet — ask a friend to open Live Wire.</p>';
       return;
     }
     var totalLevels = raceTotalLevels();
     raceOppList.innerHTML = '';
-    opponents.forEach(function(p){
-      var pr = p.presence;
+    opponents.forEach(function(pr){
       var raceLevel = pr.raceLevel || 1;
       var levelTotal = pr.levelTotal || 0;
       var levelLeft = pr.levelLeft != null ? pr.levelLeft : levelTotal;
@@ -3312,6 +3321,13 @@
     });
   }
 
+  function trackPresence(patch){
+    if (!raceChannel || !raceSubscribed) return;
+    var meta = { name: getRacerName(), raceLevel:1, levelTotal:0, levelLeft:0, cleared:false, ms:null };
+    for (var k in patch) meta[k] = patch[k];
+    raceChannel.track(meta).catch(function(){});
+  }
+
   function enterRace(){
     ensureAudio();
     sfx('click');
@@ -3320,48 +3336,54 @@
     myRaceWindow = currentRaceWindowId();
     if (racePanel) racePanel.hidden = false;
     if (window.__liveWire) window.__liveWire.startRace('w' + myRaceWindow);
-    if (roomNS){
-      roomNS.presence({ mode:'race', win: myRaceWindow, name: getRacerName(), raceLevel:1, levelTotal:0, levelLeft:0, cleared:false, ms:null }).catch(function(){});
+
+    if (sbClient){
+      if (raceChannel){ try{ sbClient.removeChannel(raceChannel); }catch(e){} }
+      raceSubscribed = false;
+      raceChannel = sbClient.channel('livewire-race-' + myRaceWindow, { config: { presence: { key: myClientId } } });
+      raceChannel.on('presence', { event: 'sync' }, function(){ renderRaceOpponents(); });
+      raceChannel.on('broadcast', { event: 'race' }, function(msg){
+        var data = msg && msg.payload;
+        if (!data || data.clientId === myClientId) return;
+        if (data.type === 'finish' && racePanel && !racePanel.hidden){
+          var secs = (data.ms / 1000).toFixed(1);
+          if (window.__liveWireToast) window.__liveWireToast('🏁 ' + (data.name || 'A racer') + ' finished', secs + 's');
+        }
+      });
+      raceChannel.subscribe(function(status){
+        if (status === 'SUBSCRIBED'){
+          raceSubscribed = true;
+          trackPresence({ raceLevel:1, levelTotal:0, levelLeft:0, cleared:false, ms:null });
+          renderRaceOpponents();
+        }
+      });
     }
     renderRaceOpponents();
   }
   window.__liveWireRaceGo = enterRace;
 
   window.__liveWireRaceProgress = function(info){
-    if (!roomNS) return;
-    var patch = { mode:'race', win: myRaceWindow, name: getRacerName(), raceLevel: info.raceLevel, levelTotal: info.levelTotal, levelLeft: info.levelLeft, cleared: !!info.cleared };
+    if (!sbClient || !raceChannel) return;
+    var patch = { raceLevel: info.raceLevel, levelTotal: info.levelTotal, levelLeft: info.levelLeft, cleared: !!info.cleared };
     if (info.cleared) patch.ms = info.ms;
-    roomNS.presence(patch).catch(function(){});
-    if (info.cleared){
-      roomNS.emit('race', { type:'finish', name: getRacerName(), ms: info.ms, win: myRaceWindow }).catch(function(){});
+    trackPresence(patch);
+    if (info.cleared && raceSubscribed){
+      raceChannel.send({ type:'broadcast', event:'race', payload:{ type:'finish', name: getRacerName(), ms: info.ms, clientId: myClientId } }).catch(function(){});
     }
   };
 
   window.__liveWireRaceLeave = function(){
     if (racePanel) racePanel.hidden = true;
-    if (roomNS){
-      roomNS.presence({ mode:null, win:null }).catch(function(){});
+    if (raceChannel){
+      try{ sbClient.removeChannel(raceChannel); }catch(e){}
+      raceChannel = null;
+      raceSubscribed = false;
     }
     updateRaceMenuSub();
   };
 
   if (raceBtn) raceBtn.addEventListener('click', enterRace);
-
-  roomReady.then(function(){
-    updateRaceMenuSub();
-    if (!roomNS) return;
-    roomNS.onPeers(function(){
-      updateRaceMenuSub();
-      renderRaceOpponents();
-    });
-    roomNS.on('race', function(msg){
-      if (msg.isMe || !msg.data) return;
-      if (msg.data.type === 'finish' && msg.data.win === myRaceWindow && racePanel && !racePanel.hidden){
-        var secs = (msg.data.ms / 1000).toFixed(1);
-        if (window.__liveWireToast) window.__liveWireToast('🏁 ' + (msg.data.name || 'A racer') + ' finished', secs + 's');
-      }
-    });
-  });
+  updateRaceMenuSub();
 
   startLoading();
 })();
