@@ -13,5 +13,5 @@
 // the missing config and degrade to "isn't set up yet" messaging instead
 // of crashing.
 
-window.LIVEWIRE_SUPABASE_URL = "";
-window.LIVEWIRE_SUPABASE_ANON_KEY = "";
+window.LIVEWIRE_SUPABASE_URL = "https://faawpkemxfuzdrcrudtl.supabase.co";
+window.LIVEWIRE_SUPABASE_ANON_KEY = "sb_publishable_PXBO7CfvSdKAgLodBYuFMQ_oDbFa..."; // paste the FULL copied value, not this truncated preview
