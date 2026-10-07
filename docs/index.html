@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Wire — Support</title>
+<style>
+  :root {
+    --wood: #6b4226;
+    --wood-hi: #8a5a34;
+    --wood-lo: #4a2d1a;
+    --cork: #d9a86a;
+    --cork-bg: #e8c088;
+    --gold: #ffcc4d;
+    --cream: #fdf3e2;
+    --ink: #2a1c10;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #2a1c10, #1a110a);
+    color: var(--cream);
+    min-height: 100vh;
+    padding-block: 48px;
+  }
+  .wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding-inline: 20px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+  .logo {
+    font-size: 2.6rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255,204,77,0.45);
+    margin: 0 0 6px;
+  }
+  .tagline {
+    color: #d8c3a8;
+    font-size: 1rem;
+    margin: 0;
+  }
+  .card {
+    background: linear-gradient(160deg, var(--wood-hi), var(--wood));
+    border: 1px solid rgba(255,204,77,0.25);
+    border-radius: 16px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+  .card h2 {
+    margin: 0 0 14px;
+    font-size: 1.15rem;
+    color: var(--gold);
+    border-bottom: 1px solid rgba(255,204,77,0.2);
+    padding-bottom: 10px;
+  }
+  .faq {
+    margin-bottom: 18px;
+  }
+  .faq:last-child { margin-bottom: 0; }
+  .faq dt {
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+  .faq dd {
+    margin: 0;
+    color: #e4d3ba;
+    line-height: 1.55;
+  }
+  .contact {
+    text-align: center;
+  }
+  .contact a {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--ink);
+    background: var(--gold);
+    font-weight: 700;
+    text-decoration: none;
+    padding: 12px 28px;
+    border-radius: 999px;
+  }
+  footer {
+    text-align: center;
+    color: #8a7558;
+    font-size: 0.85rem;
+    margin-top: 32px;
+  }
+  footer a { color: #c9a86a; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="logo">⚡ LIVE WIRE</p>
+    <p class="tagline">Support &amp; Frequently Asked Questions</p>
+  </header>
+
+  <div class="card">
+    <h2>How do I play?</h2>
+    <dl class="faq">
+      <dt>What's the goal?</dt>
+      <dd>Drag the nodes to untangle the wire so no lines cross, before the power gauge runs out. Clear it faster for a bigger speed bonus.</dd>
+    </dl>
+    <dl class="faq">
+      <dt>What are Hint, Undo, Snip, and Bomb?</dt>
+      <dd>They're boosters you can use mid-level: Hint shows a helpful move, Undo reverses your last drag, Snip and Bomb clear a tricky crossing or node for you. Snip and Bomb cost Sparks, the in-game currency you earn by playing.</dd>
+    </dl>
+    <dl class="faq">
+      <dt>What are zones and boss levels?</dt>
+      <dd>Every 10 levels you enter a new zone with its own look — the Garage, Night Circuit, Blueprint Lab, Server Farm, and the Power Grid. Every 10th level is a boss level with extra hazards; clearing one unlocks that zone's schematic collectible.</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Daily Challenge &amp; Live Race</h2>
+    <dl class="faq">
+      <dt>What's the Daily Challenge?</dt>
+      <dd>One puzzle, the same for every player, resets every day. Your fastest clear time is tracked as your personal best.</dd>
+    </dl>
+    <dl class="faq">
+      <dt>How does Live Race work?</dt>
+      <dd>It's a real-time 10-level sprint against whoever else is racing at the same moment. First to clear level 10 wins — you can see opponents' progress update live as you both play.</dd>
+    </dl>
+    <dl class="faq">
+      <dt>Is the leaderboard real?</dt>
+      <dd>Yes — scores are shared across every player of Live Wire, split into All-Time and This Week.</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Troubleshooting</h2>
+    <dl class="faq">
+      <dt>My progress didn't save / looks reset.</dt>
+      <dd>Progress is stored on your device. Reinstalling the app, or switching to a new device without transferring data, will start you fresh. Leaderboard scores you've already submitted are not affected.</dd>
+    </dl>
+    <dl class="faq">
+      <dt>I found a bug, or something looks wrong.</dt>
+      <dd>Please reach out below with your device model and iOS version, and what you were doing when it happened — that's the fastest way to get it fixed.</dd>
+    </dl>
+  </div>
+
+  <div class="card contact">
+    <h2>Still need help?</h2>
+    <p>Email us and we'll get back to you.</p>
+    <a href="mailto:abdulla.skydive@gmail.com">abdulla.skydive@gmail.com</a>
+  </div>
+
+  <footer>
+    <p>Live Wire — a wire-untangling puzzle game.</p>
+  </footer>
+</div>
+</body>
+</html>
