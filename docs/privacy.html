@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Wire — Privacy Policy</title>
+<style>
+  :root{
+    --bg:#faf9f7; --surface:#ffffff; --fg:#1c1d1f; --fg-dim:#5b5e66;
+    --rule:#e4e2dd; --accent:#2f6f5e; --accent-soft:#e7f0ec; --mono:#8a8d94;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15171a; --surface:#1c1f23; --fg:#e9eaec; --fg-dim:#9ba0a8;
+      --rule:#2c2f34; --accent:#6fd3b4; --accent-soft:#17312a; --mono:#7c818a;
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15171a; --surface:#1c1f23; --fg:#e9eaec; --fg-dim:#9ba0a8;
+    --rule:#2c2f34; --accent:#6fd3b4; --accent-soft:#17312a; --mono:#7c818a;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--fg);
+    font-family:"Source Serif 4", Georgia, "Times New Roman", serif;
+    margin:0; padding-inline:20px; padding-block:48px;
+    line-height:1.6;
+  }
+  .wrap{max-width:640px; margin:0 auto}
+  .eyebrow{
+    font-family:"Inter", system-ui, sans-serif; font-size:12px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 6px;
+  }
+  h1{
+    font-family:"Fraunces", "Source Serif 4", Georgia, serif;
+    font-size:clamp(28px,5vw,38px); font-weight:600; margin:0 0 6px; text-wrap:balance;
+  }
+  .sub{font-family:"Inter", system-ui, sans-serif; color:var(--fg-dim); font-size:14px; margin:0 0 36px}
+  section{padding-block:24px; border-top:1px solid var(--rule)}
+  section:first-of-type{border-top:none; padding-top:0}
+  h2{
+    font-family:"Fraunces", "Source Serif 4", Georgia, serif;
+    font-size:21px; font-weight:600; margin:0 0 14px;
+  }
+  h3{
+    font-family:"Inter", system-ui, sans-serif; font-size:13px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.06em; color:var(--fg-dim);
+    margin:22px 0 8px;
+  }
+  p{margin:0 0 14px; max-width:60ch}
+  ul{margin:0 0 14px; padding-left:1.2em}
+  li{margin-bottom:6px; max-width:58ch}
+  .contact{
+    background:var(--surface); border:1px solid var(--rule); border-radius:12px;
+    padding:18px 20px; font-family:"Inter", system-ui, sans-serif; font-size:15px; font-weight:600;
+  }
+  footer{
+    margin-top:40px; padding-top:20px; border-top:1px solid var(--rule);
+    font-family:"Inter", system-ui, sans-serif; font-size:12px; color:var(--mono);
+  }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Source+Serif+4:wght@400;500&family=Inter:wght@400;600;700&display=swap">
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Live Wire</p>
+  <h1>Privacy Policy</h1>
+  <p class="sub">Last updated October 7, 2026</p>
+
+  <section>
+    <h2>What this app collects</h2>
+    <p>Live Wire has no account system and no sign-in. You are never asked for your name, email, or any identifying information to play.</p>
+    <p>If you choose to submit a score to the public leaderboard, or play Live Race, the app sends three things to our database (hosted by Supabase):</p>
+    <ul>
+      <li><strong>A display name</strong> — whatever you type in, entirely your choice. Don't use your real name if you'd rather not.</li>
+      <li><strong>Your score and level</strong> reached in that session.</li>
+      <li>During a live race only, a randomly generated device identifier is used momentarily to show your race progress to other players currently racing — it is not stored permanently and is not tied to you personally.</li>
+    </ul>
+    <p>That's the complete list. Nothing else leaves your device.</p>
+
+    <h3>Public by design</h3>
+    <p>Scores and display names on the leaderboard, and progress shown during a live race, are visible to anyone else playing Live Wire — that's the point of a shared leaderboard and real-time race. Don't submit a score under a name you wouldn't want other players to see.</p>
+  </section>
+
+  <section>
+    <h2>What it doesn't do</h2>
+    <ul>
+      <li>No account creation, login, email, or password, ever</li>
+      <li>No analytics or advertising SDKs, and no ad network</li>
+      <li>No in-app purchases</li>
+      <li>No access to contacts, location, camera, or microphone</li>
+      <li>No data sold or shared with anyone beyond what's described above</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Local storage</h2>
+    <p>Your campaign progress, unlocked customization, and settings are saved only on your own device. Uninstalling the app removes this data. It is never sent anywhere.</p>
+  </section>
+
+  <section>
+    <h2>Third-party processor</h2>
+    <p>Leaderboard scores and live race data are stored using <a href="https://supabase.com/privacy" style="color:var(--accent)">Supabase</a>, a hosted database provider. They process this data on our behalf to make the leaderboard and live race features work, and don't use it for any purpose of their own.</p>
+  </section>
+
+  <section>
+    <h2>Children</h2>
+    <p>Live Wire does not knowingly collect any information that identifies a real person, from anyone, including children. The optional display name is a free-text nickname, not a real identity.</p>
+  </section>
+
+  <section>
+    <h2>Changes to this policy</h2>
+    <p>If what the app collects changes in a future update, this page will be updated and the date above will change accordingly.</p>
+
+    <h3>Contact</h3>
+    <div class="contact">abdulla.skydive@gmail.com</div>
+  </section>
+
+  <footer>Live Wire · com.buhumaid3.livewire</footer>
+</div>
+</body>
+</html>
